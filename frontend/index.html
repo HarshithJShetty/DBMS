@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Ticketing</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">🎥 Movie Ticketing</div>
+        <ul>
+            <li><a href="#movies">Movies</a></li>
+            <li><a href="login.html" target="_blank">Login</a></li>
+            <li><a href="register.html" target="_blank">Register</a></li>
+            <li><a href="contact.html" target="_blank">Contact</a></li>
+        </ul>
+    </nav>
+
+    <header>
+        <h1>Welcome to Movie Ticketing</h1>
+        <p>Book your favorite movies with ease!</p>
+    </header>
+
+    <div class="container" id="movies">
+        <!-- Movies will be dynamically generated here -->
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Movie Ticketing. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // Dynamic Movie Generation
+        const moviesContainer = document.getElementById('movies');
+
+        const moviesHtml = Array.from({ length: 5 })
+            .map(
+                (_, i) => `
+            <div class="movie">
+                <img src="assets/movie_posters/movie${i + 1}.jpg" alt="Movie Poster">
+                <div class="movie-details">
+                    <h2>Movie ${i + 1}</h2>
+                    <p>Description for Movie ${i + 1}.</p>
+                    <button onclick="bookTicket('Movie ${i + 1}')">Book Ticket</button>
+                </div>
+            </div>
+        `
+            )
+            .join('');
+
+        moviesContainer.innerHTML = moviesHtml;
+
+        // Book Ticket Functionality
+        function bookTicket(movieTitle) {
+            fetch('http://localhost:3000/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title: movieTitle, user: 'Guest' }),
+            })
+                .then((response) => response.json())
+                .then((data) => alert(data.message))
+                .catch((error) => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

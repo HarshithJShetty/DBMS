@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+    <nav>
+    <div class="logo">Movie Booking</div>
+    <ul>
+        <li><span id="username"></span></li>
+        <li><button id="logout-button">Logout</button></li>
+    </ul>
+    </nav>
+        <h2>Available Movies</h2>
+        <div id="available-movies" class="movies-container"></div>
+        
+        <h2>Your Booked Movies</h2>
+        <div id="booked-movies" class="movies-container"></div>
+    </div>
+
+    <script>
+        document.getElementById('logout-button').addEventListener('click', () => {
+    // Clear the local storage to remove user data
+    localStorage.removeItem('user');
+    localStorage.removeItem('bookings');
+
+    // Redirect to login page
+    window.location.href = 'login.html';
+});
+
+// Function to render available movies
+function renderMovies(movies) {
+  const movieContainer = document.getElementById('available-movies');
+  movieContainer.innerHTML = ''; // Clear any existing movies
+
+  movies.forEach((movie) => {
+    const movieDiv = document.createElement('div');
+    movieDiv.classList.add('movie');
+
+    movieDiv.innerHTML = `
+      <img src="assets/movie_posters/${movie.title.toLowerCase().replace(' ', '_')}.jpg" alt="${movie.title}">
+      <div>
+        <h3>${movie.title}</h3>
+        <button onclick="bookMovie('${movie.title}')">Book Ticket</button>
+      </div>
+    `;
+
+    movieContainer.appendChild(movieDiv);
+  });
+}
+
+// Fetch and render available movies from the server
+function fetchAvailableMovies() {
+  fetch('http://localhost:3000/movies')
+    .then((response) => response.json())
+    .then((movies) => {
+      renderMovies(movies);
+    })
+    .catch((error) => console.error('Error fetching available movies:', error));
+}
+
+// Function to book a movie
+function bookMovie(movieTitle) {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) {
+    alert('Please log in to book a movie.');
+    return;
+  }
+
+  fetch('http://localhost:3000/book', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ title: movieTitle, userEmail: user.email }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      alert(data.message);
+      fetchUserBookings(user.email); // Refresh user's booked movies
+    })
+    .catch((error) => console.error('Error booking movie:', error));
+}
+
+// Fetch and display the user's booked movies
+function fetchUserBookings(email) {
+  fetch(`http://localhost:3000/user/bookings?userEmail=${email}`)
+    .then((response) => response.json())
+    .then((bookings) => {
+      const bookingsContainer = document.getElementById('booked-movies');
+      bookingsContainer.innerHTML = ''; // Clear existing bookings
+
+      bookings.forEach((booking) => {
+        const bookingDiv = document.createElement('div');
+        bookingDiv.innerHTML = `<p>${booking.title}</p>`;
+        bookingsContainer.appendChild(bookingDiv);
+      });
+    })
+    .catch((error) => console.error('Error fetching user bookings:', error));
+}
+
+// Fetch movies and user bookings on page load
+const loggedInUser = JSON.parse(localStorage.getItem('user'));
+if (loggedInUser) {
+  document.getElementById('username').textContent = loggedInUser.name;
+  fetchUserBookings(loggedInUser.email);
+}
+fetchAvailableMovies();
+    </script>
+</body>
+</html>
